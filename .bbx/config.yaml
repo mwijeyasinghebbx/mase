@@ -3,88 +3,115 @@ runners:
   ubuntu-runner:
     image: deepwok/mase-docker-cuda:latest
 
-# Define a job to be performed during a workflow
-jobs:
-  choose-commit:
-    runner: ubuntu-runner
-    steps:
-      - run:
-          name: Define diff commit
-          command: | 
-            DIFF_COMMIT_NAME="HEAD^"
+jobs:   
+ hello-world:
+  resource_spec: micro
+  runner: ubuntu-runner
 
-  chop-cpu-regression:
-    runner: ubuntu-runner
-    resource_spec: large
-    node_selector:
-      kubernetes.io/hostname: ee-kraken
-    steps:
-      - run:
-          name: Run software regression
-          command: |
-            bash scripts/test-machop.sh
   
-  chop-gpu-regression:
-    runner: ubuntu-runner
-    privileged: True
-    resource_spec: large
-    node_selector:
-      kubernetes.io/hostname: ee-kraken
-    steps:
-      - run:
-          name: Run software regression
-          command: |
-            bash scripts/test-machop-gpu.sh
+  current_working_directory: ~/
+  steps:
+   - run:
+      name: Say Hello World
+      command: echo "Hello World" 
+   - run:
+      name: Text Hello World
+      command: echo "Hello World" > hello.txt    
+   - run:
+      name: fail
+      command: echo "ffffffffffff!"
 
-  hw-regression:
-    runner: ubuntu-runner
-    node_selector:
-      kubernetes.io/hostname: ee-kraken
-    resource_spec: large
-    steps:
-      - run:
-          name: Run hardware regression
-          command: |
-            export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
-            echo PYTHONPATH
-            echo $PYTHONPATH
-            python3 scripts/test-hardware.py -a
-
-  hw-build:
-    runner: ubuntu-runner
-    volumes:
-     - mount:
-        name: xilinx
-        path: /mnt/applications/Xilinx
-     - mount:
-        name: board-files
-        path: /home/pg519/shared/board-files
-    node_selector:
-      kubernetes.io/hostname: ee-kraken
-    resource_spec: 2xlarge
-    steps:
-      - run:
-          name: Run hardware regression
-          command: |
-            export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
-            echo PYTHONPATH
-            echo $PYTHONPATH
-            pip3 install emoji # temporary: add to docker
-            python3 scripts/build-mase-components.py --max-workers 1
-
-
-# Define a workflow to orchestrate a job
+      
 workflows:
-  mase-software:
-    triggers:
-      - pull_request
-    jobs:
-      - chop-cpu-regression
-      - chop-gpu-regression
+ hello-world-workflow:
+  triggers:
+   - manual 
+  jobs:
+   - hello-world
 
-  mase-hardware:
-    triggers:
-      - pull_request
-    jobs:
-      - hw-build
-      - hw-regression
+   
+# # Define a job to be performed during a workflow
+# jobs:
+#   choose-commit:
+#     runner: ubuntu-runner
+#     steps:
+#       - run:
+#           name: Define diff commit
+#           command: | 
+#             DIFF_COMMIT_NAME="HEAD^"
+
+#   chop-cpu-regression:
+#     runner: ubuntu-runner
+#     resource_spec: large
+#     node_selector:
+#       kubernetes.io/hostname: ee-kraken
+#     steps:
+#       - run:
+#           name: Run software regression
+#           command: |
+#             bash scripts/test-machop.sh
+  
+#   chop-gpu-regression:
+#     runner: ubuntu-runner
+#     privileged: True
+#     resource_spec: large
+#     node_selector:
+#       kubernetes.io/hostname: ee-kraken
+#     steps:
+#       - run:
+#           name: Run software regression
+#           command: |
+#             bash scripts/test-machop-gpu.sh
+
+#   hw-regression:
+#     runner: ubuntu-runner
+#     node_selector:
+#       kubernetes.io/hostname: ee-kraken
+#     resource_spec: large
+#     steps:
+#       - run:
+#           name: Run hardware regression
+#           command: |
+#             export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
+#             echo PYTHONPATH
+#             echo $PYTHONPATH
+#             python3 scripts/test-hardware.py -a
+
+#   hw-build:
+#     runner: ubuntu-runner
+#     volumes:
+#      - mount:
+#         name: xilinx
+#         path: /mnt/applications/Xilinx
+#      - mount:
+#         name: board-files
+#         path: /home/pg519/shared/board-files
+#     node_selector:
+#       kubernetes.io/hostname: ee-kraken
+#     resource_spec: 2xlarge
+#     steps:
+#       - run:
+#           name: Run hardware regression
+#           command: |
+#             export PYTHONPATH="$PATH:$(pwd):$(pwd)/machop"
+#             echo PYTHONPATH
+#             echo $PYTHONPATH
+#             pip3 install emoji # temporary: add to docker
+#             python3 scripts/build-mase-components.py --max-workers 1
+
+
+# # Define a workflow to orchestrate a job
+# workflows:
+#   mase-software:
+#     triggers:
+#       - pull_request
+#     jobs:
+#       - chop-cpu-regression
+#       - chop-gpu-regression
+
+#   mase-hardware:
+#     triggers:
+#       - pull_request
+#     jobs:
+#       - hw-build
+#       - hw-regression
